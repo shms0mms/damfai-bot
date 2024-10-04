@@ -1,0 +1,9 @@
+python-dotenv
+telebot 
+sqlalchemy
+asyncpg
+aiohttp
+aiogram
+uuid
+pydantic
+bcrypt

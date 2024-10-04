@@ -63,25 +63,59 @@ async def user_is_exists(msg: types.Message, session: AsyncSession) -> None:
     else:
         return True
 
-@router.message(F.text == markups['register'])
-async def register_handler(msg: types.Message, state: FSMContext):
-    await msg.answer(f'Перейдите по ссылке {SITE_URL} для регистрации')
+# @router.message(F.text == markups['register'])
+# async def register_handler(msg: types.Message, state: FSMContext):
+#     await msg.answer(f'Перейдите по ссылке {SITE_URL} для регистрации')
     
     
-@router.message(AuthState.register_password)
-async def register_email_handler(msg: types.Message, state: FSMContext):
-    # СОХРАНЕНИЕ EMAIL
-    email = msg.text
-    await msg.answer('Введите пароль для регистрации')
-    await state.set_state(AuthState.register_success)
-   
+# @router.message(AuthState.register_password)
+# async def register_email_handler(msg: types.Message, state: FSMContext):
+#     # СОХРАНЕНИЕ EMAIL
+#     email = msg.text
+#     await msg.answer('Введите пароль для регистрации')
+#     await state.set_state(AuthState.register_success)
 
-@router.message(AuthState.register_success)
-async def register_password_handler(msg: types.Message, state: FSMContext):
-    # СОХРАНЕНИЕ PASSWORD
-    password = msg.text
-    await msg.answer(f'Вы успешно зарегистрировались в нашей платформе Inter.School! сайт: {SITE_URL}')
-    await state.clear()
+
+# @router.message(AuthState.register_success)
+# async def register_password_handler(msg: types.Message, state: FSMContext):
+#     # СОХРАНЕНИЕ PASSWORD
+#     password = msg.text
+#     await msg.answer(f'Вы успешно зарегистрировались в нашей платформе damfai! сайт: {SITE_URL}')
+#     await state.clear()   
+
+
+@router.message(F.text == markups['logout'])
+async def logout_handler(msg: types.Message, session: AsyncSession ):
+   tg_user_id = msg.from_user.id
+   user_tg = await session.scalar(select(UserTg).where(UserTg.tg_id == tg_user_id).options(selectinload(UserTg.user)))
+   if user_tg:
+           
+        await session.delete(user_tg)
+        await session.commit()
+        await msg.answer(f'Вы успешно вышли из аккаунта damfai! сайт: {SITE_URL}')
+   else:
+       await msg.answer('Вы не авторизованы')
+
+   
+@router.message(F.text == markups['profile'])
+async def profile_handler(msg: types.Message, session: AsyncSession ):
+   tg_user_id = msg.from_user.id
+   user_tg = await session.scalar(select(UserTg).where(UserTg.tg_id == tg_user_id).options(selectinload(UserTg.user)))
+
+
+   if user_tg: 
+        html_profile = f"""
+<b>Профиль пользователя</b>\n
+<strong>Имя:</strong> {user_tg.user.name}\n
+<strong>Фамилия:</strong> {user_tg.user.surname}\n
+<strong>Email:</strong> {user_tg.user.email}
+"""
+        await msg.answer(html_profile, parse_mode='HTML')
+   else:
+       await msg.answer('Вы не авторизованы')
+
+
+
 
 
 email = ''
@@ -126,7 +160,7 @@ async def login_password_handler(msg: types.Message, session: AsyncSession, stat
     else:
         await set_autheficated(tg_user_id, email, session)
 		
-    await msg.answer(f'Вы успешно вошли в аккаунт Inter.School! сайт: {SITE_URL}', reply_markup=auth_user_markup)
+    await msg.answer(f'Вы успешно вошли в аккаунт damfai! сайт: {SITE_URL}', reply_markup=auth_user_markup)
     await state.clear()
 
 

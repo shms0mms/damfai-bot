@@ -3,11 +3,7 @@ import uuid
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db import Base
-class Role(Enum):
-    teacher = "teacher"
-    student = "student"
-    admin = "admin"
-    manager = "manager"
+
 
 
 class UserTg(Base):
@@ -25,13 +21,9 @@ class User(Base):
 	
     name:Mapped[str]    
     surname:Mapped[str]
-    patronymic:Mapped[str]
-    
-    
+ 
     password:Mapped[bytes]
     
     email:Mapped[str] = mapped_column(unique=True)
     
-    number:Mapped[str] 
-        
-    role:Mapped[Role]
+  

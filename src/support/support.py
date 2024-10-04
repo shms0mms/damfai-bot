@@ -25,7 +25,7 @@ async def save_message(message: types.Message, session: AsyncSession) -> None:
 @router.message(F.text == markups['feedback'])
 async def feedback_handler(msg: types.Message, session: AsyncSession, state: FSMContext):
     await state.set_state(FeedbackState.wait)
-    await msg.answer('Приветствуем! Напиши свой отзыв о нашей платформе Inter.School, и напиши нам, если нашел какой-либо баг 🙏')
+    await msg.answer('Приветствуем! Напиши свой отзыв о нашей платформе damfai, и напиши нам, если нашел какой-либо баг 🙏')
     
 @router.message(FeedbackState.wait)    
 async def feedback_messages(msg: types.Message, session: AsyncSession, state: FSMContext):

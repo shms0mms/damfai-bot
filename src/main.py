@@ -2,7 +2,7 @@ import logging
 from uuid import uuid4
 import bcrypt
 from sqlalchemy import select
-from auth.models import Role, User, UserTg
+from auth.models import  User, UserTg
 from config import TOKEN
 import asyncio
 from middleware.db import SessionMiddleware
@@ -14,21 +14,18 @@ from aiogram.filters import Command
 from aiogram import types
 from markups import auth_user_markup, user_markup
 from sqlalchemy.ext.asyncio import AsyncSession
-bot = Bot(TOKEN) 
+bot = Bot(TOKEN)
 dp = Dispatcher()  
 dp.update.middleware(SessionMiddleware(session_pool=session))
 router = Router(name="main")
 @router.message(Command('start'))
 async def start(msg: types.Message, session: AsyncSession):
-    text = rf'Приветствуем в Inter.School, {msg.from_user.mention_html()}!'
+    text = rf'Приветствуем в damfai, {msg.from_user.mention_html()}!'
     tg_id = msg.from_user.id
     start_user = User(
     name="Александр",
     surname="Шаронов",
-    patronymic="Иванович",
     email="shmsmms01@gmail.com",
-    number="+798356384922",
-    role=Role.student,
     id=uuid4(),
     password=bcrypt.hashpw(password='12345678'.encode(), salt=bcrypt.gensalt())
 )

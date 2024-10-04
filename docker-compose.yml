@@ -1,5 +1,4 @@
-version: '3.9'
-
+version: "3.9"
 
 services:
   app:
@@ -11,14 +10,13 @@ services:
     env_file:
       - .env
     ports:
-      - 8000:8000
+      - 4200:4200
 
   db:
     image: postgres
 
     env_file:
       - .env
-    container_name: db
+    container_name: db_tg
     ports:
-      - 5432:5432    
-
+      - 5431:5431

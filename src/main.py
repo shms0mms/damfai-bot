@@ -7,13 +7,14 @@ from config import TOKEN
 import asyncio
 from middleware.db import SessionMiddleware
 from support.support import router as support_router
-from auth.auth import router as auth_router
+from auth.router import router as auth_router
 from aiogram import Bot, Dispatcher, Router
 from db import session
 from aiogram.filters import Command
 from aiogram import types
 from markups import auth_user_markup, user_markup
 from sqlalchemy.ext.asyncio import AsyncSession
+from notify.router import router as notify_router
 bot = Bot(TOKEN)
 dp = Dispatcher()  
 dp.update.middleware(SessionMiddleware(session_pool=session))
@@ -52,6 +53,7 @@ async def main():
     dp.include_router(router)
     dp.include_router(auth_router)
     dp.include_router(support_router)
+    dp.include_router(notify_router)
     
     await dp.start_polling(bot)
 

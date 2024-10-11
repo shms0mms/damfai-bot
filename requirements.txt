@@ -7,3 +7,6 @@ aiogram
 uuid
 pydantic
 bcrypt
+aiogram3-triggers
+pytz
+apscheduler

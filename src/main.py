@@ -14,9 +14,16 @@ from aiogram.filters import Command
 from aiogram import types
 from markups import auth_user_markup, user_markup
 from sqlalchemy.ext.asyncio import AsyncSession
-from notify.router import router as notify_router
+from config import TOKEN
+from db import create_db
+from aiogram import Bot, Dispatcher
+from aiogram3_triggers import TRouter
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.util import utc
+user_data = {}
 bot = Bot(TOKEN)
 dp = Dispatcher()  
+
 dp.update.middleware(SessionMiddleware(session_pool=session))
 router = Router(name="main")
 @router.message(Command('start'))
@@ -42,11 +49,47 @@ async def start(msg: types.Message, session: AsyncSession):
         markup = user_markup
     else:
         markup = auth_user_markup
+    user_data['chat_id'] = msg.chat.id 
+    await start_scheduler(msg, bot)
+    
     await msg.answer(text=text, reply_markup=markup, parse_mode='HTML')
 
 
-from config import TOKEN
-from db import create_db
+
+notify_router = TRouter()
+
+scheduler = AsyncIOScheduler()
+scheduler.configure(timezone=utc)
+async def find_book_to_read():
+    book = 'Твоя книга дня 📚 - "Идиот", Достоевский А.А.'  # Пример названия книги
+    return book
+
+# Функция для отправки уведомления пользователю
+async def send_reminder_to_user(chat_id: int, bot: Bot):
+    book = await find_book_to_read()
+    message = f"Не забудь прочитать сегодня: {book}"
+    await bot.send_message(chat_id=chat_id, text=message)
+
+# Триггер, который будет срабатывать каждый день
+@notify_router.triggers_handler('minute')
+async def notify_to_read_book_every_day(dp: Dispatcher, bot: Bot):
+    await send_reminder_to_user(user_data["chat_id"], bot)
+
+# Запуск планировщика
+async def start_scheduler(dp: Dispatcher, bot: Bot):
+    scheduler.add_job(
+        send_reminder_to_user,
+        trigger='cron',
+        hour=22,
+        minute=21,
+        kwargs={"chat_id": dp.chat.id, "bot": bot }
+    )
+    scheduler.start()
+    
+
+
+
+
 async def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     await create_db()

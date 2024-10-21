@@ -6,7 +6,7 @@ import bcrypt
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from .models import User, UserTg
-from config import SITE_URL
+from config import config
 from const import markups
 from sqlalchemy.ext.asyncio import AsyncSession
 from markups import auth_user_markup
@@ -65,7 +65,7 @@ async def user_is_exists(msg: types.Message, session: AsyncSession) -> None:
 
 # @router.message(F.text == markups['register'])
 # async def register_handler(msg: types.Message, state: FSMContext):
-#     await msg.answer(f'Перейдите по ссылке {SITE_URL} для регистрации')
+#     await msg.answer(f'Перейдите по ссылке {config.env.SITE_URL} для регистрации')
     
     
 # @router.message(AuthState.register_password)
@@ -80,7 +80,7 @@ async def user_is_exists(msg: types.Message, session: AsyncSession) -> None:
 # async def register_password_handler(msg: types.Message, state: FSMContext):
 #     # СОХРАНЕНИЕ PASSWORD
 #     password = msg.text
-#     await msg.answer(f'Вы успешно зарегистрировались в нашей платформе damfai! сайт: {SITE_URL}')
+#     await msg.answer(f'Вы успешно зарегистрировались в нашей платформе damfai! сайт: {config.env.SITE_URL}')
 #     await state.clear()   
 
 
@@ -92,7 +92,7 @@ async def logout_handler(msg: types.Message, session: AsyncSession ):
            
         await session.delete(user_tg)
         await session.commit()
-        await msg.answer(f'Вы успешно вышли из аккаунта damfai! сайт: {SITE_URL}')
+        await msg.answer(f'Вы успешно вышли из аккаунта damfai! сайт: {config.env.SITE_URL}')
    else:
        await msg.answer('Вы не авторизованы')
 
@@ -160,7 +160,7 @@ async def login_password_handler(msg: types.Message, session: AsyncSession, stat
     else:
         await set_autheficated(tg_user_id, email, session)
 		
-    await msg.answer(f'Вы успешно вошли в аккаунт damfai! сайт: {SITE_URL}', reply_markup=auth_user_markup)
+    await msg.answer(f'Вы успешно вошли в аккаунт damfai! сайт: {config.env.SITE_URL}', reply_markup=auth_user_markup)
     await state.clear()
 
 

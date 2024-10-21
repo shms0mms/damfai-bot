@@ -3,10 +3,19 @@ version: "3.9"
 services:
   app:
     build: .
-    container_name: app
+    container_name: backend_app
     depends_on:
       - db
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
 
+  bot-app:
+    build: .
+    container_name: bot_app
+    depends_on:
+      - db
     env_file:
       - .env
     ports:
@@ -14,9 +23,10 @@ services:
 
   db:
     image: postgres
-
+    container_name: db
     env_file:
       - .env
-    container_name: db_tg
     ports:
-      - 5431:5431
+      - 5432:5432
+    volumes:
+      - ./db_data:/var/lib/postgresql/data/

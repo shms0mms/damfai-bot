@@ -4,6 +4,8 @@ from calendar import monthrange
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from server.src.utils.get_statistics import get_statistics
+
 from ..books_to_reading.booksRead_models import Reading_Book
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,37 +16,14 @@ from ..get_current_me import get_current_user, get_current_id
 from ..db import get_session
 from ..app_auth.auth_models import User 
 from ..books.books_models import Ganre,Book
-
+from ..utils.date import dates, monthes
 from .analytics_models import PagesPerDay, MinutesPerDay
 from .analytics_schema import PerDateData, PerMonthData
 
 
 app = APIRouter(prefix="/analytics", tags=["analytics"])
 
-dates = {
-    0:"Monday",
-    1:"Tuesday",
-    2:"Wednesday",
-    3:"Thursday",
-    4:"Friday",
-    5:"Saturday",
-    6:"Sunday"
-}
 
-monthes = {
-    1:"January",
-    2:"February",
-    3:"March",
-    4:"April",
-    5:"May",
-    6:"June",
-    7:"July",
-    8:"August",
-    9:"September",
-    10:"October",
-    11:"November",    
-    12:"December"
-}
 
 # ________________UPDATE ANALYTICS DATA____________________
 
@@ -82,36 +61,9 @@ async def update_sped_words_per_minute(speed:float,me:User = Depends(get_current
 @app.get("/reading_info")
 async def get_reading_info(user_id = Depends(get_current_id),me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
     user = await session.scalar(select(User).where(User.id == user_id).options(selectinload(User.reading_books), selectinload(User.minutes_per_day), selectinload(User.pages_per_day)))
-    if user:
-        books_count = await session.scalar(select(func.count(Reading_Book.book_id)).where(Reading_Book.is_read == True))
-        pages_count = 0
-        for i in user.pages_per_day:
-            pages_count += i.pages_count
-
-        minutes_per_day = await session.scalar(select(func.avg(MinutesPerDay.minutes_count)).where(MinutesPerDay.user_id == user_id))
-        
-        year = datetime.datetime.now().date().year
-        month = datetime.datetime.now().date().month
-        start = datetime.date(year, month, 1)
-        end = datetime.date(year, month, monthrange(year, month)[1])
-        pages_per_month = await session.scalar(select(func.sum(PagesPerDay.pages_count)).where(PagesPerDay.date.between(start, end)))
-
-        books_per_month = await session.scalar(select(func.sum(Reading_Book.book_id)).where(Reading_Book.finish_to_read.between(start, end), Reading_Book.is_read == True))
-
-        words_per_minute:list[int] = eval(user.words_per_minute)
-        dataset = {
-            "books_count": books_count ,
-            "pages_count":pages_count ,
-            "words_per_min": (sorted(words_per_minute))[round(len(words_per_minute)/2 - 0.5)],
-            "minutes_per_day": minutes_per_day,
-            "pages_per_month": pages_per_month,
-            "books_per_month": books_per_month,
 
 
-        }
-
-
-        return dataset
+    return await get_statistics(user, session)
     
 # get pages last 7 days
 @app.get("/get_pages_last_7_days", response_model=PerDateData)

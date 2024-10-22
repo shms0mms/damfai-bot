@@ -21,6 +21,7 @@ from middleware.db import SessionMiddleware
 from support.router import router as support_router
 from auth.router import router as auth_router
 from books.router import router as books_router
+from analytics.router import router as analytics_router
 from aiogram import Bot, Dispatcher, Router
 from server.src.db import session
 from aiogram.filters import Command
@@ -124,6 +125,7 @@ async def main():
     dp.include_router(support_router)
     dp.include_router(notify_router)
     dp.include_router(books_router)
+    dp.include_router(analytics_router)
     
     await dp.start_polling(bot)
 

@@ -54,20 +54,22 @@ async def start(msg: types.Message, session: AsyncSession):
     dob=datetime.datetime.now().date(),
 
     )
-#     book1 = Book(
-#     title="Идиот",
-#     author="Федор Достоевский",
-#     desc="Идиот - книга о князе, который променял жену на любовницу",
-#     writen_date=datetime.date.today(),
-#     age_of_book=1
-# )   
-#     book2 = Book(
-#     title="Олег",
-#     author="Федор Достоевский",
-#     desc="Идиот - книга о князе, который променял жену на любовницу",
-#     writen_date=datetime.date.today(),
-#     age_of_book=2
-# )   
+    book1 = Book(
+    title="Идиот",
+    author="Федор Достоевский",
+    desc="Идиот - книга о князе, который променял жену на любовницу",
+    writen_date=datetime.date.today(),
+    age_of_book=1
+)   
+    book2 = Book(
+    title="Олег",
+    author="Федор Достоевский",
+    desc="Идиот - книга о князе, который променял жену на любовницу",
+    writen_date=datetime.date.today(),
+    age_of_book=2
+)   
+    # session.add(book1)
+    # session.add(book2)
     user_exists = await session.scalar(select(User).where(User.email == 'shmsmms01@gmail.com'))
     if user_exists is None:
         session.add(user)

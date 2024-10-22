@@ -17,8 +17,8 @@ class AuthData(BaseModel):
 
 class EnvData(BaseSettings):
     # DB_DATA
-    DB_URl:str
-    DB_URl_ASYNC:str
+    DB_URL:str
+    DB_URL_ASYNC:str
     
 
 class EnvGigaChat(BaseSettings):

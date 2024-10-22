@@ -5,10 +5,11 @@ from const import analytics_markups
 from aiogram import F, Router, types
 from sqlalchemy import select
 from server.src.analytics.analytics_models import MinutesPerDay
+from server.src.books_to_reading.booksRead_models import Reading_Book
 from server.src.app_auth.auth_models import User, UserTg
 from const import markups
 from sqlalchemy.ext.asyncio import AsyncSession
-from server.src.utils.date import dates
+from server.src.utils.date import dates, monthes
 from sqlalchemy.orm import selectinload
 import matplotlib.pyplot as plt
 from aiogram.types import BufferedInputFile, CallbackQuery
@@ -52,9 +53,9 @@ async def get_pages_per_week(user, session):
         dataset[dates[i.date.weekday()]] = i.minutes_count
 
     fig, ax = plt.subplots()
-    week_days = list(dataset.keys())
-    week_days_values = list(dataset.values())
-    ax.barh(week_days, week_days_values)  
+    d = list(dataset.keys())
+    d_values = list(dataset.values())
+    ax.barh(d, d_values)  
     ax.set_title('Страниц за неделю')
 
     # сохранение в буфер, чтобы не сохранять локально
@@ -65,6 +66,46 @@ async def get_pages_per_week(user, session):
     photo = BufferedInputFile(buffer.read(), filename='plot.png')
     plt.close(fig)
     return photo
+
+async def get_books_last_12_months(user, session):
+    last_books = await session.scalars(select(Reading_Book).where(Reading_Book.finish_to_read.between(datetime.datetime.now().date()-datetime.timedelta(days=365), datetime.datetime.now().date())))
+    last_books = last_books.all()
+    dataset = {
+        "Январь": 1,
+        "Февраль": 1,
+        "Март": 1,
+        "Апрель": 1,
+        "Май": 1,
+        "Июнь": 1,
+        "Июль": 1,
+        "Август": 1,
+        "Сентябрь": 1,
+        "Октябрь": 1,
+        "Ноябрь": 1,    
+        "Декабрь": 1
+    }
+    
+    for i in last_books:
+        dataset[monthes[i.finish_to_read.month]] += 1
+    
+    d_values = list(dataset.values())
+    
+    def func(pct, allvalues):
+        absolute = int(pct/100. * sum(allvalues))-1
+        return "{:d}".format(absolute)
+    fig, ax = plt.subplots()
+    ax.pie(d_values, labels=dataset.keys(),autopct=lambda pct: func(pct, d_values), textprops=dict(color="w")) # autopct=lambda pct: f"{int(pct / sum(d_values) * 100)}", 
+    ax.set_title('Количество прочитанных книг в каждом месяце')
+    
+    # сохранение в буфер, чтобы не сохранять локально
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0) 
+
+    photo = BufferedInputFile(buffer.read(), filename='plot.png')
+    plt.close(fig)
+    return photo
+
     
 async def get_minutes_per_week(user, session):
     last_minutes =  await session.scalars(select(MinutesPerDay).where(MinutesPerDay.user_id == user.id, MinutesPerDay.date.between(datetime.datetime.now().date()-datetime.timedelta(days=7), datetime.datetime.now().date())))
@@ -74,9 +115,9 @@ async def get_minutes_per_week(user, session):
         dataset[dates[i.date.weekday()]] = i.minutes_count
         
     fig, ax = plt.subplots()
-    week_days = list(dataset.keys())
-    week_days_values = list(dataset.values())
-    ax.barh(week_days, week_days_values)  
+    d = list(dataset.keys())
+    d_values = list(dataset.values())
+    ax.barh(d, d_values)  
     ax.set_title('Минут за неделю')
 
     # сохранение в буфер, чтобы не сохранять локально
@@ -92,6 +133,7 @@ async def get_minutes_per_week(user, session):
 graphs = {
     'minutes_per_week': get_minutes_per_week,
     'pages_per_week': get_pages_per_week,
+    'books_last_12_months':  get_books_last_12_months
 }
 
 # Сделать получение конкретного графика (State)

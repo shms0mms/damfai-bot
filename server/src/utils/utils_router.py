@@ -1,6 +1,7 @@
 
 import datetime
 import json
+import logging
 import os
 import pathlib
 
@@ -19,8 +20,8 @@ async def create_db():
     async with engine.begin() as conn:
         try:
             await conn.run_sync(Base.metadata.drop_all)
-        except:
-            pass
+        except Exception:
+            logging.error(f"Any error occured: {Exception}")
         await  conn.run_sync(Base.metadata.create_all)
 
         

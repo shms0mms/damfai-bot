@@ -66,7 +66,7 @@ async def parse_ganres(session:AsyncSession = Depends(get_session)):
 async def parse_books(session:AsyncSession = Depends(get_session)):
     BASE_DIR  = pathlib.Path(__file__).parent.parent.parent.parent
     num = 0
-    with open(f"{BASE_DIR}app/parse/data.json", "r", encoding='utf-8') as f:
+    with open(f"{BASE_DIR}/parse/data.json", "r", encoding='utf-8') as f:
 
         data = json.load(f)
         for i in data:

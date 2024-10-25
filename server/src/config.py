@@ -39,13 +39,13 @@ class TgBotEnv(BaseSettings):
 
 class Config(BaseModel):
     
-    env_data:EnvData = EnvData()
+    
     
     gigachat_data:EnvGigaChat = EnvGigaChat()
 
     auth_data:AuthData = AuthData()
 
-    
+    env_data:EnvData = EnvData()
     
     
 config = Config()

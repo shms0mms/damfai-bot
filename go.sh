@@ -9,5 +9,5 @@ gunicorn server.src.app:app --workers 1 --worker-class uvicorn.workers.UvicornWo
 echo "Запускаем Telegram бота..."
 python -u bot/src/main.py
 
-# Ожидаем завершения обоих процессов
+
 wait

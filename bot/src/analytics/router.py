@@ -22,7 +22,6 @@ class ChooseGraphState(StatesGroup):
 router = Router()
 
 
-
 @router.message(F.text == markups['statistics'])
 async def statistics_handler(msg: types.Message, session: AsyncSession ):
 
@@ -93,8 +92,15 @@ async def get_books_last_12_months(user, session):
     def func(pct, allvalues):
         absolute = int(pct/100. * sum(allvalues))-1
         return "{:d}".format(absolute)
-    fig, ax = plt.subplots()
-    ax.pie(d_values, labels=dataset.keys(),autopct=lambda pct: func(pct, d_values), textprops=dict(color="w")) # autopct=lambda pct: f"{int(pct / sum(d_values) * 100)}", 
+
+    fig, ax = plt.subplots(figsize=(8, 8))  
+    ax.pie(
+        d_values,
+        labels=list(dataset.keys()), 
+        textprops=dict(color="black"),  
+        autopct=lambda pct: func(pct, d_values), 
+        labeldistance=1.1
+    )
     ax.set_title('Количество прочитанных книг в каждом месяце')
     
     # сохранение в буфер, чтобы не сохранять локально
@@ -129,14 +135,13 @@ async def get_minutes_per_week(user, session):
     plt.close(fig)
     return photo
 
-
-graphs = {
+# Удобное полученик конкретной функции графика
+GRAPHS = {
     'minutes_per_week': get_minutes_per_week,
     'pages_per_week': get_pages_per_week,
     'books_last_12_months':  get_books_last_12_months
 }
 
-# Сделать получение конкретного графика (State)
 @router.message(F.text == markups['analytics'])
 async def analytics_handler(msg: types.Message, session: AsyncSession, state: FSMContext):
 
@@ -146,7 +151,7 @@ async def analytics_handler(msg: types.Message, session: AsyncSession, state: FS
 
 @router.callback_query(lambda c: c.data in analytics_markups)
 async def analytics_graph_handler(callback_query: CallbackQuery, session: AsyncSession):
-    selected_option = callback_query.data  # Текст кнопки будет в callback_data
+    selected_option = callback_query.data 
     user = await session.scalar(
     select(User)
         .join(UserTg, User.id == UserTg.user_id)
@@ -156,7 +161,7 @@ async def analytics_graph_handler(callback_query: CallbackQuery, session: AsyncS
 
     # Логика обработки в зависимости от выбранной кнопки
     if analytics_markups[selected_option]:
-        photo = await graphs[selected_option](user, session)
+        photo = await GRAPHS[selected_option](user, session)
         await callback_query.message.answer_photo(photo=photo)
     
 

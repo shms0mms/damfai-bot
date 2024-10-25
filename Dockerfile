@@ -10,15 +10,14 @@ RUN pip install --no-cache-dir -r req.txt
 COPY . .
 
 
-RUN apt-get update && apt-get install -y supervisor
+# RUN apt-get update && apt-get install -y supervisor
 # Копируем скрипт-обертку
-# COPY start.sh .
+COPY go.sh .
 
 
 # Запускаем скрипт-обертку
-# CMD ["./start.sh"]
+CMD ["./go.sh"]
 
 
-
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+# CMD ["supervisord", "-c", "/app/supervisord.conf"]
 

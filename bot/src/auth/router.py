@@ -51,7 +51,6 @@ async def get_user_by_email(email: str, session: AsyncSession) -> User:
     user = await session.execute(statement)
     return user.scalar_one_or_none()
    
-
 async def user_is_exists(msg: types.Message, session: AsyncSession) -> None:
     email = msg.text
     statement = select(User).where(User.email == email)

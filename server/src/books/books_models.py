@@ -1,13 +1,14 @@
+    
 import datetime
-from typing import  TYPE_CHECKING
 import uuid
-from sqlalchemy.orm  import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy.orm  import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
+from typing import  TYPE_CHECKING
 
 from ..db import Base
+
 if TYPE_CHECKING:
     from ..app_auth.auth_models import User
-
 
 class Rating(Base):
     __tablename__ = "rating_table"
@@ -23,6 +24,16 @@ class Rating(Base):
     user:Mapped["User"] = relationship(uselist=False)
 
 
+class Authors(Base):
+    __tablename__ = "authors_table"
+    
+    author:Mapped[str] = mapped_column(primary_key=True, unique=True)
+    
+    description:Mapped[str] = mapped_column(nullable=True)
+
+    books:Mapped["Book"] = relationship(uselist=True)
+
+
 class Book(Base):
     
     __tablename__ = "book_table"
@@ -30,16 +41,17 @@ class Book(Base):
     id:Mapped[int] = mapped_column(primary_key=True)
 
     file_path:Mapped[str] = mapped_column(nullable=True)
-
+    
     title:Mapped[str]
-    author:Mapped[str]
+    author:Mapped[str] = mapped_column(ForeignKey("authors_table.author", ondelete="CASCADE"))
     desc:Mapped[str]
     writen_date:Mapped[datetime.date] = mapped_column(nullable=True)
     age_of_book:Mapped[int] = mapped_column(nullable=True)
+    
+    zip_text:Mapped[str]
+
 
     chapters:Mapped[list["Chapter"]] = relationship(back_populates="book", uselist=True)
-
-    # embadings:Mapped[str]
 
     ganres:Mapped[list["Ganre"]] = relationship(back_populates="books", uselist=True, secondary="ganre_book_table")
 
@@ -47,15 +59,12 @@ class Book(Base):
 
     favourite_for_users:Mapped[list["User"]] = relationship(back_populates="favourite_books", uselist=True, secondary="favourite_user_table")
 
-    # emabings:Mapped[list[float]] = [1, -10, 12 , 14, 18]
-
 
 class Chapter(Base):
     
     __tablename__ = "chapter_table"
     
     id:Mapped[int] = mapped_column(primary_key=True)
-
     title:Mapped[str] = mapped_column(nullable=True)
     numberOfChapter:Mapped[int] = mapped_column()
 
@@ -64,12 +73,12 @@ class Chapter(Base):
 
     pages:Mapped[list["PageModel"]] = relationship(back_populates="chapter", uselist=True)
 
+
 class PageModel(Base):
     
     __tablename__ = "page_table"
     
     id:Mapped[int] = mapped_column(primary_key=True)
-    
     numberOfPage:Mapped[float] = mapped_column()
     text:Mapped[str]
 
@@ -91,7 +100,6 @@ class Ganre(Base):
 
 class GanreBook(Base):  
     __tablename__ = "ganre_book_table"
-    
     
     ganre_id:Mapped[int] = mapped_column(ForeignKey("ganre_table.id"), primary_key=True)
     book_id:Mapped[int] = mapped_column(ForeignKey("book_table.id"), primary_key=True)

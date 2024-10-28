@@ -138,7 +138,7 @@ async def login_handler(msg: types.Message, session: AsyncSession, state: FSMCon
 async def login_email_handler(msg: types.Message, session: AsyncSession,state: FSMContext):
    if (not (validate_email(msg.text))):
        await msg.answer('Неверный email')
-       return
+       await state.set_state(AuthState.login_password)
    if not (await user_is_exists(msg, session)):
        return
    email = msg.text
@@ -153,8 +153,7 @@ async def login_email_handler(msg: types.Message, session: AsyncSession,state: F
 @router.message(AuthState.login_success)
 async def login_password_handler(msg: types.Message, session: AsyncSession, state: FSMContext):
     if (len(msg.text) < 8):
-        await msg.answer('Пароль должен быть не менее 8 символов')
-        return
+        return await msg.answer('Пароль должен быть не менее 8 символов')
     tg_user_id = msg.from_user.id
     password = msg.text
     data = await state.get_data()
@@ -162,8 +161,8 @@ async def login_password_handler(msg: types.Message, session: AsyncSession, stat
     user = await get_user_by_email(email, session)
     if not (await check_password(password, user.password)):
         await msg.answer('Неверный пароль')
-        await state.set_state(AuthState.login_password)
-        return
+        return await state.set_state(AuthState.login_password)
+       
     else:
         await set_autheficated(tg_user_id, email, session)
 		

@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy import select
@@ -8,7 +9,8 @@ from .auth_utils.utils import decode_password, check_password, create_access_tok
 
 from ..db import get_session
 from .auth_models import User
-from ..get_current_me import get_current_id, get_current_user
+from ..get_current_me import get_current_user
+
 
 
 app = APIRouter(prefix="/auth", tags=["auth"])

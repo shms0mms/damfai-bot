@@ -5,18 +5,19 @@ from const import analytics_markups
 from aiogram import F, Router, types
 from sqlalchemy import select
 from server.src.analytics.analytics_models import MinutesPerDay
-from server.src.books_to_reading.booksRead_models import Reading_Book
+from server.src.reading_books.booksRead_models import Reading_Book
 from server.src.app_auth.auth_models import User, UserTg
 from const import markups
 from sqlalchemy.ext.asyncio import AsyncSession
-from server.src.utils.date import dates, monthes
+from server.src.analytics.date import dates, monthes
 from sqlalchemy.orm import selectinload
 import matplotlib.pyplot as plt
 from aiogram.types import BufferedInputFile, CallbackQuery
-from server.src.utils.get_statistics import get_statistics
+from server.src.analytics.get_statistics import get_common_statistics_func
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from markups import analytics_markup
+
 class ChooseGraphState(StatesGroup):
     choose = State()
 router = Router()
@@ -31,7 +32,7 @@ async def statistics_handler(msg: types.Message, session: AsyncSession ):
     .where(UserTg.tg_id == msg.from_user.id) 
     .options(selectinload(User.reading_books), selectinload(User.minutes_per_day), selectinload(User.pages_per_day))
 )
-    dataset = await get_statistics(user, session)
+    dataset = await get_common_statistics_func(user, session)
     if dataset:
         html = f"""
 	    	<b>Ваша статистика</b>\n
@@ -41,6 +42,8 @@ async def statistics_handler(msg: types.Message, session: AsyncSession ):
 	    <strong>- Минут в день:</strong> {dataset['minutes_per_day']}\n
 	    <strong>- Страниц в месяц:</strong> {dataset['pages_per_month']}\n
 	    <strong>- Книг в месяц:</strong> {dataset['books_per_month']}\n
+        <strong>- Предварительный подсчёт прочитанных страниц на завтра:</strong> {dataset['predicted_pages']}\n
+        <strong>- Предварительный подсчёт прочитанных минут на завтра:</strong> {dataset['predicted_minutes']}\n
 	    	"""
         await msg.answer(f'{html}', parse_mode='HTML')
 
@@ -50,6 +53,8 @@ async def get_pages_per_week(user, session):
     dataset = {"ПН":0,"ВТ":0,"СР":0,"ЧТ":0,"ПТ":0,"СБ":0,"ВС":0 }
     for i in last_minutes:
         dataset[dates[i.date.weekday()]] = i.minutes_count
+    
+
 
     fig, ax = plt.subplots()
     d = list(dataset.keys())

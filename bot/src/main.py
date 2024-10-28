@@ -5,11 +5,14 @@ sys.path.append('/app')
 
 # for working relations
 from bot.src.utils.get_markup import get_markup
+
 from server.src.bookmarks.bookmarsk_models import FavouriteUser, BookmarkUser
 from server.src.themes.themes_models import Theme
 from server.src.books.books_models import Book, PageModel
 from server.src.analytics.analytics_models import PagesPerDay, MinutesPerDay
-from server.src.books_to_reading.booksRead_models import Reading_Book
+from server.src.reading_books.booksRead_models import Reading_Book
+from server.src.extensions.extensions_models import Extension, ExtensionUser
+from server.src.themes.themes_models import Theme, ThemeUser
 from server.src.app_auth.auth_models import User, UserTg
 
 
@@ -18,7 +21,6 @@ import bcrypt
 from sqlalchemy import select
 import asyncio
 from middleware.db import SessionMiddleware
-from support.router import router as support_router
 from auth.router import router as auth_router
 from books.router import router as books_router
 from analytics.router import router as analytics_router
@@ -124,7 +126,6 @@ async def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     dp.include_router(router)
     dp.include_router(auth_router)
-    dp.include_router(support_router)
     dp.include_router(notify_router)
     dp.include_router(books_router)
     dp.include_router(analytics_router)

@@ -1,9 +1,5 @@
 import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr , field_validator
-
-
-
+from pydantic import BaseModel
 
 class ShowBookmark(BaseModel):
 
@@ -16,6 +12,7 @@ class ShowBookmark(BaseModel):
 
     id_current_chapter: int
     current_page: int  
+    current_number_of_page: int
 
 
 class ShowFavourite(BaseModel):

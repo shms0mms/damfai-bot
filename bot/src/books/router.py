@@ -23,13 +23,10 @@ async def choose_book_handler(msg: Message, session: AsyncSession, state: FSMCon
     books = await session.scalars(select(Book))
     books = books.all()
 	
-    keyboard = []
+    markup = None
     if len(books):
-        for book in books:
-            keyboard.append(KeyboardButton(text=f"{book.id}. {book.title}"))
-    
-    markup = ReplyKeyboardMarkup(keyboard=[keyboard], resize_keyboard=True)
-    if len(keyboard):
+        markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=f"{book.id}. {book.title}")] for book in books], resize_keyboard=True)
+    if markup:
         await state.set_state(ChooseBookState.choose)
         await msg.answer(text="Выберите книгу из предложенного списка", reply_markup=markup)
     else: 
@@ -43,7 +40,7 @@ async def speech_and_return_to_user(msg: Message, session: AsyncSession, state: 
     book_id = extract_book_index(msg.text)
     book = await session.scalar(select(Book).where(Book.id == book_id))
     me = msg.from_user.first_name
-    await state.clear()
+    
     if book:
         try:
             url = config.env.SPEECH_URL
@@ -62,10 +59,12 @@ async def speech_and_return_to_user(msg: Message, session: AsyncSession, state: 
                 markup = await get_markup(msg.from_user.id, session)
 				
                 await msg.answer_document(document=FSInputFile(path=file_path, filename=f"{msg.text}.wav"), reply_markup=markup)
+                await state.clear()
                 
             else:
                 logging.error(f"Request from SpeechAPI failed with status code {response.status_code}")
                 return await msg.answer('Что-то пошло не так, попробуйте еще раз.')
+                await state.clear()
 
         except requests.exceptions.SSLError as ssl_error:
             logging.error(f"SSL Error occurred: {ssl_error}")
@@ -74,5 +73,6 @@ async def speech_and_return_to_user(msg: Message, session: AsyncSession, state: 
         except Exception as e:
             logging.error(f"An error occurred: {e}")
     else:
-        return await msg.answer('Такая книга не найдена в базе данных!')
+        await msg.answer('Такая книга не найдена в базе данных!')
+        await state.clear()
     

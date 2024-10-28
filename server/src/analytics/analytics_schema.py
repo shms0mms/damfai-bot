@@ -9,6 +9,8 @@ class CommonReadingInfo(BaseModel):
         minutes_per_day: int | None
         pages_per_month: int | None
         books_per_month: int | None
+        predicted_minutes: int | None
+        predicted_pages: int | None
 
 
 class PerDateData(BaseModel):
@@ -36,6 +38,3 @@ class PerMonthData(BaseModel):
         November:int
         December:int
 
-#  favourite_janre
-# Zip text webscokets
-#  system of recommendations

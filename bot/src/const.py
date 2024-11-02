@@ -26,5 +26,5 @@ lang_markups = {
 level_markups = {
     "summary big" : "Слабо",
     "summary" : "Средне",
-    "summary brief" : "Сильно"
+    # "summary brief" : "Сильно"
 }

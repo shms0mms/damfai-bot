@@ -30,3 +30,4 @@ class ShowPage(BaseModel):
     
     numberOfPage: int
     text: str
+    id: int

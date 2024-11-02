@@ -1,6 +1,5 @@
 import json
 import datetime
-from typing import Annotated
 import uuid
 import typing
 
@@ -9,14 +8,14 @@ from sqlalchemy.orm import  Mapped, mapped_column, relationship
 
 from enum import Enum
 
-from ..db import Base
-
+from server.src.books.books_models import EmoteEnum
 if typing.TYPE_CHECKING:   
-    from ..analytics.analytics_models import PagesPerDay, MinutesPerDay
-    from ..books.books_models import Book, PageModel
-    from ..themes.themes_models import Theme
-    from ..extensions.extensions_models import Extension
+    from server.src.analytics.analytics_models import PagesPerDay, MinutesPerDay
+    from server.src.books.books_models import Book, PageModel
+    from server.src.themes.themes_models import Theme
+    from server.src.extensions.extensions_models import Extension
  
+from server.src.db import Base
 
 class Role(Enum):
     user = "user"
@@ -25,7 +24,7 @@ class Role(Enum):
     
     
 
-created_at = Annotated[datetime.datetime, mapped_column(server_default=text("TIMEZONE('Europe/Moscow', now())"))]
+created_at = typing.Annotated[datetime.datetime, mapped_column(server_default=text("TIMEZONE('Europe/Moscow', now())"))]
 
 
 
@@ -40,15 +39,17 @@ class User(Base):
     role:Mapped[Role] = mapped_column(default=Role.user)
     password:Mapped[bytes]
     created_at:Mapped[created_at]
+    
+    # running
+    running_points:Mapped[int] = mapped_column(default=0)
 
     # user инфа
     email:Mapped[str] = mapped_column(unique=True)
     name:Mapped[str]
     surname:Mapped[str]
     dob:Mapped[datetime.date]
-    balance: Mapped[float] = mapped_column(default=0)
-    target_of_books:Mapped[int] = mapped_column(nullable=True)
-    target_of_data:Mapped[datetime.date] = mapped_column(nullable=True)
+    balance: Mapped[int] = mapped_column(default=0)
+    
     
     # analytics data 
     words_per_minute:Mapped[str] = mapped_column(default=json.dumps([120]))
@@ -65,6 +66,9 @@ class User(Base):
         uselist=True,
         secondary="bookmark_user_table")
     
+    # bookmarks_on_sum_page:Mapped[list["ReadingPage"]] = relationship(
+    #     uselist=True,
+    #     secondary="sum_bookmark_user_table")
     
     #  theme router
     themes: Mapped[list["Theme"]] = relationship(
@@ -87,9 +91,9 @@ class User(Base):
     pages_per_day:Mapped[list["PagesPerDay"]] = relationship(back_populates="user", uselist=True)
     minutes_per_day:Mapped[list["MinutesPerDay"]] = relationship(back_populates="user", uselist=True)
 
-    
-    
+    emote: Mapped[EmoteEnum] = mapped_column(default=None, nullable=True)
 
+    
 class UserTg(Base):
     __tablename__ = "user_tg_table"
     id:Mapped[uuid.UUID] = mapped_column(primary_key=True)

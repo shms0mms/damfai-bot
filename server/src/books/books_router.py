@@ -1,20 +1,19 @@
 
-import shutil
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends,  HTTPException
 from fastapi.responses import FileResponse
 
 
-from ..get_current_me import get_current_user
-from ..db import get_session
-from ..utils.common_schema import ShowBook
+from server.src.get_current_me import get_current_user
+from server.src.db import get_session
+from server.src.utils.common_schema import ShowBook
+from server.src.reading_books.booksRead_models import Reading_Book
 
-from .books_schema import  CreateRating, ShowGanres,ShowBookWithChapters
+from .books_schema import  CreateRating, ShowGanres,ShowBookWithChapters,ShowPage
 from .books_models import Book, Chapter, PageModel, Rating, Ganre
 
 app = APIRouter(prefix="/books", tags=["books"])
@@ -47,7 +46,7 @@ async def get_image_book(id_book:int, session:AsyncSession = Depends(get_session
     book = await session.scalar(select(Book).where(Book.id == id_book))
     if book:
         if book.file_path:
-            return FileResponse(f"src/images/books_img/{book.file_path}")
+            return FileResponse(f"images/books_img/{book.file_path}")
         raise HTTPException(detail={"detail":"Book do not have image", "status_code":400}, status_code=400)
     raise HTTPException(detail={"detail":"Book is not exist", "status_code":400}, status_code=400)
 
@@ -78,10 +77,13 @@ async def get_books_with_chapters(id_book:int,session:AsyncSession = Depends(get
 
 
 # get page of chapter(redact)
-@app.get("/get_pages_by_chapter/{id_chapter}")
-async def get_pages_by_chapter(id_chapter:int, page:int, me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
-    page = await session.scalar(select(PageModel).where(PageModel.chapter_id == id_chapter, PageModel.numberOfPage == page))
-    return page
+@app.get("/get_pages_by_chapter/{id_chapter}", response_model=ShowPage)
+async def get_pages_by_chapter(id_book:int,id_chapter:int, page:int, me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
+    r_book = await session.scalar(select(Reading_Book).where(Reading_Book.book_id == id_book))
+    if r_book:
+        page = await session.scalar(select(PageModel).where(PageModel.chapter_id == id_chapter, PageModel.numberOfPage == page))
+        return page
+    raise HTTPException(detail={"status_code":403, "detail":"You do not read this book"}, status_code=403)
 
 #  ---------------------work with rating---------------------
 
@@ -103,8 +105,7 @@ async def create_rating(rating_data:CreateRating,me = Depends(get_current_user),
                 "data":"book is not exist",
                 "status":400
         })
-    await session.refresh(rating)
-    return rating
+    return True
 
 
 #  ---------------------work with ganres---------------------
@@ -116,23 +117,3 @@ async def ganres(session:AsyncSession = Depends(get_session)):
     return ganres.all()
 
 
-
-
-
-# create img for book
-@app.post("/create/img/{id_book}", description="debug")
-async def create_img(id_book:int,file:UploadFile = File(...), me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
-    book = await session.scalar(select(Book).where(Book.id == id_book))
-    if book:
-        if book.file_path:
-            raise HTTPException(detail={"detail":"Book already have image", "status_code":400}, status_code=400)
-        file_name = str(book.id) + ".jpg"
-        file_path = f"src/images/books_img/{file_name}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        book.file_path = file_name
-        session.add(book)
-        await session.commit()
-        await session.refresh(book)
-        return book
-    raise HTTPException(detail={"detail":"Book is not exist", "status_code":400}, status_code=400)

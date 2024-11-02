@@ -1,14 +1,23 @@
     
 import datetime
 import uuid
+
 from sqlalchemy.orm  import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
+
 from typing import  TYPE_CHECKING
+from enum import Enum
 
-from ..db import Base
-
+from server.src.db import Base
 if TYPE_CHECKING:
-    from ..app_auth.auth_models import User
+    from server.src.app_auth.auth_models import User
+
+class EmoteEnum(Enum):
+  happy = "happy"
+  sad = "sad"
+  neutral = "neutral"
+  lover = "lover"
+  angry = "angry"
 
 class Rating(Base):
     __tablename__ = "rating_table"
@@ -23,7 +32,6 @@ class Rating(Base):
     user_id:Mapped[uuid.UUID] = mapped_column(ForeignKey("user_table.id", ondelete="CASCADE"))
     user:Mapped["User"] = relationship(uselist=False)
 
-
 class Authors(Base):
     __tablename__ = "authors_table"
     
@@ -32,7 +40,6 @@ class Authors(Base):
     description:Mapped[str] = mapped_column(nullable=True)
 
     books:Mapped["Book"] = relationship(uselist=True)
-
 
 class Book(Base):
     
@@ -47,7 +54,7 @@ class Book(Base):
     desc:Mapped[str]
     writen_date:Mapped[datetime.date] = mapped_column(nullable=True)
     age_of_book:Mapped[int] = mapped_column(nullable=True)
-    
+    emote: Mapped[EmoteEnum] = mapped_column(default=None, nullable=True)
     zip_text:Mapped[str]
 
 
@@ -58,7 +65,6 @@ class Book(Base):
     ratings:Mapped[list["Rating"]] = relationship(back_populates="book", uselist=True)
 
     favourite_for_users:Mapped[list["User"]] = relationship(back_populates="favourite_books", uselist=True, secondary="favourite_user_table")
-
 
 class Chapter(Base):
     
@@ -72,8 +78,7 @@ class Chapter(Base):
     book:Mapped["Book"] = relationship(uselist=False, back_populates="chapters")
 
     pages:Mapped[list["PageModel"]] = relationship(back_populates="chapter", uselist=True)
-
-
+    
 class PageModel(Base):
     
     __tablename__ = "page_table"
@@ -87,7 +92,6 @@ class PageModel(Base):
 
     bookmarks_for_user:Mapped[list["User"]] = relationship(back_populates="bookmarks_on_page", uselist=True, secondary="bookmark_user_table")
 
-
 class Ganre(Base):  
     __tablename__ = "ganre_table"
 
@@ -97,9 +101,9 @@ class Ganre(Base):
 
     books:Mapped[list["Book"]] = relationship(back_populates="ganres", uselist=True, secondary="ganre_book_table")
 
-
 class GanreBook(Base):  
     __tablename__ = "ganre_book_table"
     
     ganre_id:Mapped[int] = mapped_column(ForeignKey("ganre_table.id"), primary_key=True)
     book_id:Mapped[int] = mapped_column(ForeignKey("book_table.id"), primary_key=True)
+

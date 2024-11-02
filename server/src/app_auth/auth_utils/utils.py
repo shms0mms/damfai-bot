@@ -4,22 +4,20 @@ from fastapi import HTTPException
 import jwt
 import bcrypt
 
-from ...config import config
+from server.src.config import config
 
+# decode password
 async def decode_password(password:str) -> bytes:
     
     new_password = bcrypt.hashpw(password=password.encode(), salt = bcrypt.gensalt())
     return new_password
 
-
+# check password
 async def check_password(password:str, old_password:bytes) -> bool:
     
     return bcrypt.checkpw(password=password.encode(), hashed_password=old_password)
 
-
-# _____________tokens__________________________________
-
-
+# create access token
 async def create_access_token(
     user_id:int,
     algorithm:str = config.auth_data.algorithm,
@@ -30,9 +28,7 @@ async def create_access_token(
     token = jwt.encode(payload=payload, algorithm=algorithm, key=private_key)
     return token
 
-
-
-
+# valid access token
 async def valid_access_token(
         token, 
         algorithm:str = config.auth_data.algorithm,

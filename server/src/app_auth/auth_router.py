@@ -4,12 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from server.src.get_current_me import get_current_user
+from server.src.db import get_session
+
 from .auth_schema import RegisterUser, LoginUser, ShowUser, ShowUserWithToken, UpdateUser
 from .auth_utils.utils import decode_password, check_password, create_access_token
-
-from ..db import get_session
 from .auth_models import User
-from ..get_current_me import get_current_user
+
 
 
 
@@ -44,7 +45,7 @@ async def register_user(data:RegisterUser ,session:AsyncSession = Depends(get_se
     data_dict["password"] = await decode_password(password=data.password)
     
     
-    user = User(**data_dict)
+    user = User(**data_dict, emote=None)
     session.add(user) 
     await session.flush()
 

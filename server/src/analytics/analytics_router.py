@@ -1,52 +1,31 @@
 
-import datetime
 import json
-from fastapi import APIRouter, Depends, HTTPException
 
+from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from .analytics_models import  MinutesPerDay
-from .analytics_schema import PerDateData, PerMonthData
+from server.src.db import get_session
+from server.src.get_current_me import get_current_user
+from server.src.app_auth.auth_models import User 
+
+from .analytics_schema import PerDateData, PerMonthData, CommonReadingInfo
 from .get_statistics import (
 get_common_statistics_func,
 get_pages_last_7_days_func,
 get_minutes_last_7_days_func,
 get_books_last_12_months_func,
 get_favourite_ganres_func,
-get_predicted_minutes_func,
-get_predicted_pages_func
 )
-
-from ..get_current_me import get_current_user, get_current_id
-from ..db import get_session
-from ..app_auth.auth_models import User 
-
 
 app = APIRouter(prefix="/analytics", tags=["analytics"])
 
-
-
 # ________________UPDATE ANALYTICS DATA____________________
 
-
-@app.post("/minutes_per_day/add")
-async def add_minutes_per_day(time_minutes:float,me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
-    user = await session.scalar(select(User).where(User.id == me.id).options(selectinload(User.minutes_per_day)))
-    if user:
-        minute = await session.scalar(select(MinutesPerDay).where(MinutesPerDay.date == datetime.datetime.now().date(), MinutesPerDay.user_id == me.id))
-        if minute:
-            minute.minutes_count += time_minutes
-        else:
-            minute = MinutesPerDay(date=datetime.datetime.now().date(),minutes_count=time_minutes,user_id=me.id)
-            session.add(minute)
-        await session.commit()
-        return True
-    
-
-@app.put("/update_sped_words_per_minute")
+# update speed words per minute
+@app.put("/update_speed_words_per_minute")
 async def update_sped_words_per_minute(speed:float,me:User = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
     result = eval(me.words_per_minute)
     if speed < 30 or speed > 340:
@@ -62,7 +41,7 @@ async def update_sped_words_per_minute(speed:float,me:User = Depends(get_current
 # ________________GRAPHICS____________________
 
 # reading common info
-@app.get("/reading_info")
+@app.get("/reading_info", response_model=CommonReadingInfo)
 async def get_reading_info(me = Depends(get_current_user),session:AsyncSession = Depends(get_session)):
     user = await session.scalar(select(User).where(User.id == me.id).options(selectinload(User.reading_books), selectinload(User.minutes_per_day), selectinload(User.pages_per_day)))
     return await get_common_statistics_func(user, session)

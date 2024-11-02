@@ -4,7 +4,7 @@ import logging
 from const import analytics_markups
 from aiogram import F, Router, types
 from sqlalchemy import select
-from server.src.analytics.analytics_models import MinutesPerDay
+from server.src.analytics.analytics_models import MinutesPerDay, PagesPerDay
 from server.src.reading_books.booksRead_models import Reading_Book
 from server.src.app_auth.auth_models import User, UserTg
 from const import markups
@@ -17,7 +17,7 @@ from server.src.analytics.get_statistics import get_common_statistics_func
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from markups import analytics_markup
-
+import math
 class ChooseGraphState(StatesGroup):
     choose = State()
 router = Router()
@@ -48,11 +48,13 @@ async def statistics_handler(msg: types.Message, session: AsyncSession ):
         await msg.answer(f'{html}', parse_mode='HTML')
 
 async def get_pages_per_week(user, session):
-    last_minutes =  await session.scalars(select(MinutesPerDay).where(MinutesPerDay.user_id == user.id, MinutesPerDay.date.between(datetime.datetime.now().date()-datetime.timedelta(days=7), datetime.datetime.now().date())))
-    last_minutes = last_minutes.all()
-    dataset = {"ПН":0,"ВТ":0,"СР":0,"ЧТ":0,"ПТ":0,"СБ":0,"ВС":0 }
-    for i in last_minutes:
-        dataset[dates[i.date.weekday()]] = i.minutes_count
+    last_pages =  await session.scalars(select(PagesPerDay).where(PagesPerDay.user_id == user.id, PagesPerDay.date.between(datetime.datetime.now().date()-datetime.timedelta(days=7), datetime.datetime.now().date())))
+    last_pages = last_pages.all()
+    dataset = {"Monday":0,"Tuesday":0,"Wednesday":0,"Thursday":0,"Friday":0,"Saturday":0,"Sunday":0
+               
+                }
+    for i in last_pages:
+        dataset[dates[i.date.weekday()]] = i.pages_count
     
 
 
@@ -71,31 +73,38 @@ async def get_pages_per_week(user, session):
     plt.close(fig)
     return photo
 
+
+
 async def get_books_last_12_months(user, session):
-    last_books = await session.scalars(select(Reading_Book).where(Reading_Book.finish_to_read.between(datetime.datetime.now().date()-datetime.timedelta(days=365), datetime.datetime.now().date())))
+    last_books = await session.scalars(select(Reading_Book)
+                                       .where(Reading_Book.finish_to_read.between(
+                                           datetime.datetime.now().date() - datetime.timedelta(days=365),
+                                           datetime.datetime.now().date()),
+                                           Reading_Book.user_id == user.id))
     last_books = last_books.all()
     dataset = {
-        "Январь": 1,
-        "Февраль": 1,
-        "Март": 1,
-        "Апрель": 1,
-        "Май": 1,
-        "Июнь": 1,
-        "Июль": 1,
-        "Август": 1,
-        "Сентябрь": 1,
-        "Октябрь": 1,
-        "Ноябрь": 1,    
-        "Декабрь": 1
+        "January": 0,
+        "February": 0,
+        "March": 0,
+        "April": 0,
+        "May": 0,
+        "June": 0,
+        "July": 0,
+        "August": 0,
+        "September": 0,
+        "October": 0,
+        "November": 0,    
+        "December": 0
     }
-    
-    for i in last_books:
-        dataset[monthes[i.finish_to_read.month]] += 1
+    for book in last_books:
+        dataset[monthes[book.finish_to_read.month]] += 1
     
     d_values = list(dataset.values())
     
     def func(pct, allvalues):
-        absolute = int(pct/100. * sum(allvalues))-1
+        if math.isnan(pct) or pct < 0.01:
+            return "0"  # Отобразить 0 для значений, близких к нулю или NaN
+        absolute = int(pct / 100. * sum(allvalues))
         return "{:d}".format(absolute)
 
     fig, ax = plt.subplots(figsize=(8, 8))  
@@ -121,7 +130,16 @@ async def get_books_last_12_months(user, session):
 async def get_minutes_per_week(user, session):
     last_minutes =  await session.scalars(select(MinutesPerDay).where(MinutesPerDay.user_id == user.id, MinutesPerDay.date.between(datetime.datetime.now().date()-datetime.timedelta(days=7), datetime.datetime.now().date())))
     last_minutes = last_minutes.all()
-    dataset = {"ПН":0,"ВТ":0,"СР":0,"ЧТ":0,"ПТ":0,"СБ":0,"ВС":0 }
+    dataset = {"Monday":0,
+               "Tuesday":0,
+               "Wednesday":0,
+               "Thursday":0,
+               "Friday":0,
+               "Saturday":0,
+               "Sunday":0
+            
+                }
+    
     for i in last_minutes:
         dataset[dates[i.date.weekday()]] = i.minutes_count
         

@@ -57,7 +57,6 @@ async def user_is_exists(msg: types.Message, session: AsyncSession) -> None:
     user = await session.execute(statement)
     user = user.scalar_one_or_none()
     if user is None:
-        await msg.answer('Пользователь не найден')
         return False
     else:
         return True
@@ -140,7 +139,10 @@ async def login_email_handler(msg: types.Message, session: AsyncSession,state: F
        await msg.answer('Неверный email')
        await state.set_state(AuthState.login_password)
    if not (await user_is_exists(msg, session)):
-       return
+       await msg.answer('Пользователь не найден')
+       await state.set_state(AuthState.login_password)
+       
+ 
    email = msg.text
    await msg.answer(f'Ваш email: {email}')
    await state.set_data({'email': msg.text})

@@ -3,9 +3,10 @@ import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 
-from ..db import Base
+from server.src.app_auth.auth_models import User
 
-from ..app_auth.auth_models import User
+from server.src.db import Base
+
 
 class PagesPerDay(Base):
 

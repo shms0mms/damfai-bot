@@ -11,7 +11,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./src/images:/app/src/images
+      - ./server/src/images:/app/server/src/images
 
   db:
     image: postgres
